@@ -1,8 +1,9 @@
 <?php
+
 class Page extends \Tina4\ORM
 {
-    public $tableName="page";
-    public $primaryKey="id"; //set for primary key
+    public $tableName = "page";
+    public $primaryKey = "id"; //set for primary key
     //public $softDelete=true; //uncomment for soft deletes in crud
     public $genPrimaryKey = true;
 
@@ -12,10 +13,7 @@ class Page extends \Tina4\ORM
     public $description;
     public $keywords;
     public $image;
-    public $headers;
-    public $headerContent;
     public $content;
-    public $footer;
     public $isPublished;
     public $dateCreated;
     public $dateModified;

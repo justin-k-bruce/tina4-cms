@@ -47,23 +47,17 @@ class Content extends \Tina4\Data
     }
 
     /**
+     * Get Pages
      * @param $slug
-     * @return object
+     * @return string
      * @throws \Twig\Error\LoaderError
      */
-    public function getPage($slug): object
+    public function getPage($slug): string
     {
         $page = (new Page());
         $page->load("slug = '{$slug}'");
 
-        $pages = (object)[];
-
-        $pages->headers = \Tina4\renderTemplate(html_entity_decode($page->headers, ENT_QUOTES), ["title" => $page->title, "description" => $page->description, "request" => $_REQUEST]);
-        $pages->headerContent = \Tina4\renderTemplate(html_entity_decode($page->headerContent, ENT_QUOTES));
-        $pages->content = \Tina4\renderTemplate(html_entity_decode($page->content, ENT_QUOTES));
-        $pages->footer = \Tina4\renderTemplate(html_entity_decode($page->footer, ENT_QUOTES));
-
-        return $pages;
+        return \Tina4\renderTemplate(html_entity_decode($page->content, ENT_QUOTES), ["title" => $page->title, "description" => $page->description, "request" => $_REQUEST]);
     }
 
     /**
@@ -331,9 +325,9 @@ class Content extends \Tina4\Data
         $filter = "id <> {$article->id} and ( " . join(" or ", $likes) . " )";
         $related = (new Article())->select("id,title,description,slug,image,author,published_date", 4)->where($filter)->orderBy("published_date desc");
         $article->relatedArticles = $related->asObject();
-
+        $article->url = "/content/article/" . $this->getSlug($article->title);
         foreach ($article->relatedArticles as $id => $articleData) {
-
+            $article->relatedArticles[$id]->url = "/content/article/" . $this->getSlug($article->title);
             if (!file_exists("./cache/article-" . md5($articleData->id) . ".png")) {
                 if (!empty($articleData->image)) {
                     file_put_contents("./cache/article-" . md5($articleData->id) . ".png", base64_decode($article->image));
@@ -393,10 +387,12 @@ class Content extends \Tina4\Data
 
         foreach ($articles as $id => $article) {
             $articles[$id]->content = $this->parseContent($article->content);
+            $articles[$id]->url = "/content/article/" . $this->getSlug($article->title);
             if (!file_exists("./cache/article-" . md5($article->id) . ".png")) {
                 if (!empty($article->image)) {
                     file_put_contents("./cache/article-" . md5($article->id) . ".png", base64_decode($article->image));
                     $articles[$id]->image = "/cache/article-" . md5($article->id) . ".png";
+
                 } else {
                     $articles[$id]->image = null;
                 }

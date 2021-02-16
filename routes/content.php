@@ -2,12 +2,7 @@
 
 \Tina4\Get::add("/", function (\Tina4\Response $response, \Tina4\Request $request) {
     $pageName = "home";
-
-    $pages = (new Content())->getPage($pageName);
-    $headers = $pages->headers;
-    $headerContent = $pages->headerContent;
-    $content = $pages->content;
-    $footer = $pages->footer;
+    $content = (new Content())->getPage($pageName);
 
     $pageMeta = (new Content())->getPageMeta($pageName);
     if (!file_exists("./src/assets/images/og-{$pageName}.png")) {
@@ -20,7 +15,7 @@
     } else {
         $image = "https://" . $_SERVER["HTTP_HOST"] . "/src/assets/images/og-{$pageName}.png";
     }
-    $html = \Tina4\renderTemplate("content.twig", ['headers' => $headers, 'headerContent' => $headerContent, "content" => $content, "footer" => $footer, "pageName" => $pageName, "title" => $pageMeta->title, "image" => $image, "description" => $pageMeta->description, "keywords" => $pageMeta->keywords]);
+    $html = \Tina4\renderTemplate("content.twig", ["content" => $content, "pageName" => $pageName, "title" => $pageMeta->title, "image" => $image, "description" => $pageMeta->description, "keywords" => $pageMeta->keywords]);
 
     return $response ($html, HTTP_OK, TEXT_HTML);
 });
@@ -28,11 +23,7 @@
 
 \Tina4\Get::add("/content/{pageName}", function ($pageName, \Tina4\Response $response, \Tina4\Request $request) {
 
-    $pages = (new Content())->getPage($pageName);
-    $headers = $pages->headers;
-    $headerContent = $pages->headerContent;
-    $content = $pages->content;
-    $footer = $pages->footer;
+    $content = (new Content())->getPage($pageName);
 
 
     $pageMeta = (new Content())->getPageMeta($pageName);
@@ -46,7 +37,7 @@
     } else {
         $image = "https://" . $_SERVER["HTTP_HOST"] . "/src/assets/images/og-{$pageName}.png";
     }
-    $html = \Tina4\renderTemplate("content.twig", ['headers' => $headers, 'headerContent' => $headerContent, "content" => $content, "footer" => $footer, "pageName" => $pageName, "title" => $pageMeta->title, "image" => $image, "description" => $pageMeta->description, "keywords" => $pageMeta->keywords]);
+    $html = \Tina4\renderTemplate("content.twig", ["content" => $content, "pageName" => $pageName, "title" => $pageMeta->title, "image" => $image, "description" => $pageMeta->description, "keywords" => $pageMeta->keywords]);
     return $response ($html, HTTP_OK, TEXT_HTML);
 });
 

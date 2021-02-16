@@ -125,3 +125,27 @@ Snippet content of "mySnippet"
   Hello {{world}}!
   
 ```
+
+### CMS Events
+
+Generic Code Example:
+``` 
+(new \Tina4\Event())->onTrigger("beforePageUpdate", function (Page $page, \Tina4\Request $request) {
+    //Your own code here
+    //$page->random = "random";
+
+    //Manipulate parsed variables from form
+    //$request->params["testVariable"];
+});
+```
+
+
+| Events           | Variables                             |
+|------------------|---------------------------------------|
+| beforePageCreate | object Page,  \Tina4\Request $request |
+| afterPageCreate  | object Page,  \Tina4\Request $request |
+| beforePageUpdate | object Page,  \Tina4\Request $request |
+| afterPageUpdate  | object Page,  \Tina4\Request $request |
+| beforePageDelete | object Page,  \Tina4\Request $request |
+| afterPageDelete   | object Page,  \Tina4\Request $request |
+| beforePageFetch  | object Page,  \Tina4\Request $request |
