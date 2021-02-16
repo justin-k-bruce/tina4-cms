@@ -10,8 +10,7 @@
         </div>
         <div class="form-group col-md-6">
             <label for="description">Description</label>
-            <input class="form-control" type="text" name="description" placeholder="Description"
-                   value="{{ data.description }}">
+            <input class="form-control" type="text" name="description" placeholder="Description" value="{{ data.description }}">
         </div>
         <div class="form-group col-md-1">
             <img class="img-thumbnail" src="data:image/png;base64,{{ data.image }}">
@@ -22,334 +21,67 @@
         </div>
         <div class="form-group col-md-2">
             <label for="playerKey">Published</label>
-            <input class="form-control" type="checkbox" name="isPublished"
-                   value="1" {% if (data.isPublished == 1 ) %} checked {% endif %} >
+            <input class="form-control" type="checkbox" name="isPublished" value="1" {%  if (data.isPublished == 1 ) %} checked {% endif%} >
         </div>
+
+
         <div class="form-group col-md-12">
-            {# Headers - Start #}
-            <input type="button" class="form-control w-100 my-2 section-title" data-toggle="collapse"
-                   data-target="#headersDropdown" value="Headers">
-            <div id="headersDropdown" class="collapse">
+            <label for="contentEditor">Content</label>
+            <div id="contentEditor" class="form-control" style="height:300px">{{ data.content | raw }}</div>
+            <script>
+                function saveContent(editor) {
+                    $('#saveContent').val(editor.getContent());
+                }
 
-                <div id="headersEditor" class="form-control" style="height:300px">{{ data.headers | raw }}</div>
-                <textarea id="saveHeaders" class="form-control" style="display:none; height: 300px"
-                          name="headers">{{ data.headers | raw }}</textarea>
-                <script>
-                    var toolbarOptions = [
-                        ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-                        ['blockquote', 'code-block'],
-                        [{'list': 'ordered'}, {'list': 'bullet'}],
-                        [{'script': 'sub'}, {'script': 'super'}],      // superscript/subscript
-                        [{'indent': '-1'}, {'indent': '+1'}],          // outdent/indent
-                        [{'direction': 'rtl'}],                         // text direction
+                tinyMCE.execCommand('mceRemoveEditor', false, 'contentEditor');
 
-                        [{'header': [1, 2, 3, 4, 5, 6, false]}],
-                        ['link', 'image', 'video'],
+                tinymce.init({
+                    selector: '#contentEditor',
+                    plugins: [
+                        'advlist autolink lists link image charmap print preview anchor',
+                        'searchreplace visualblocks code fullscreen',
+                        'insertdatetime media table paste imagetools wordcount emoticons'
+                    ],
+                    toolbar: 'undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | numlist bullist | outdent indent | image media emoticons | menuSnippets ',
+                    images_upload_url: '/cms/upload?formToken={{ formToken | raw }}',
+                    images_upload_base_path: '/uploads/',
+                    images_upload_credentials: true,
+                    setup:function(editor) {
+                        editor.on('change', function(e) {
+                            saveContent(editor)
+                        });
 
-                        [{'color': []}, {'background': []}],          // dropdown with defaults from theme
-                        [{'font': []}],
-                        [{'align': []}],
-
-                        ['clean'],
-                        [{'snippets': [{% for snippet in snippets %}'{{ snippet.name }}',{% endfor %}]}],// remove formatting button
-                        [{'articles': ['small', 'mini', 'medium', 'med-large', 'large']}],
-                        ['html']
-
-                    ];
-
-
-                    var editor = new Quill('#headersEditor', {
-                        modules: {
-                            toolbar: {
-                                container: toolbarOptions,
-                                handlers: {
-                                    "snippets": insertSnippet,
-                                    "articles": insertArticle,
-                                    "html": toggleSource
-                                }
+                        editor.ui.registry.addMenuButton('menuSnippets', {
+                            text: 'Snippets',
+                            fetch: function (callback) {
+                                var items = [
+                                {% for snippet in snippets %}
+                                    {
+                                        type: 'menuitem',
+                                        text: '{{ snippet.name }}',
+                                        onAction: function (_) {
+                                            editor.insertContent('\n\{\{ include( getSnippet("{{ snippet.name }}") ) \}\}');
+                                        }
+                                    },
+                                {% endfor %}
+                                ];
+                                callback(items);
                             }
-                        },
-                        theme: 'snow'
-                    });
-
-
-                    function insertSnippet(snippetName) {
-                        console.log('Inserting Snippet ', snippetName);
-
-                        const cursorPosition = editor.getSelection().index;
-                        editor.insertText(cursorPosition, '\n\{\{ include( getSnippet("' + snippetName + '") ) \}\}');
+                        });
                     }
-
-                    function insertArticle(articleType) {
-                        articleText = `\{\% set articles = Content.getArticles ("", 8) \%\}\n\{\% for article in articles \%\}{\% include "snippets/${articleType}.twig" with {"article": article} \%\}\{\% endfor \%\}\n{\% set params = {"tag": "all", "skip": 4, "limit": 4, "template": "${articleType}.twig"} \%\}\n\{\% include "load-more.twig" with params \%\}`;
-                        const cursorPosition = editor.getSelection().index;
-                        editor.insertText(cursorPosition, '\n' + articleText);
-
-                    }
-
-                    function toggleSource() {
-                        if (!$('#saveHeaders').is(':visible')) {
-                            $('#saveHeaders').show();
-                            $('#headersEditor').hide();
-                            if ($('div.ql-editor', '#headersEditor').hasClass('ql-blank')) {
-                                $('#saveHeaders').val('');
-                            } else {
-                                $('#saveHeaders').val(editor.root.innerHTML);
-                            }
-                        } else {
-                            $('#saveHeaders').hide();
-                            $('#headersEditor').show();
-                            editor.root.innerHTML = $('#saveHeaders').val();
-                        }
-                    }
-
-                    editor.on('text-change', function (delta, source) {
-                        if ($('div.ql-editor', '#headersEditor').hasClass('ql-blank')) {
-                            $('#saveHeaders').val('');
-                        } else {
-                            $('#saveHeaders').val(editor.root.innerHTML);
-                        }
-                    });
-
-                </script>
-            </div>
-            {# Header Content - Start #}
-            <input type="button" class="form-control w-100 my-2 section-title" data-toggle="collapse"
-                   data-target="#headerContentDropdown" value="Header Content">
-            <div id="headerContentDropdown" class="collapse">
-
-                <div id="headerContentEditor" class="form-control"
-                     style="height:300px">{{ data.headerContent | raw }}</div>
-                <textarea id="saveHeaderContent" class="form-control" style="display:none; height: 300px"
-                          name="headerContent">{{ data.headerContent | raw }}</textarea>
-                <script>
-
-                    var editor1 = new Quill('#headerContentEditor', {
-                        modules: {
-                            toolbar: {
-                                container: toolbarOptions,
-                                handlers: {
-                                    "snippets": insertSnippet1,
-                                    "articles": insertArticle1,
-                                    "html": toggleSource1
-                                }
-                            }
-                        },
-                        theme: 'snow'
-                    });
-
-
-                    function insertSnippet1(snippetName) {
-                        console.log('Inserting Snippet ', snippetName);
-
-                        const cursorPosition = editor1.getSelection().index;
-                        editor1.insertText(cursorPosition, '\n\{\{ include( getSnippet("' + snippetName + '") ) \}\}');
-                    }
-
-                    function insertArticle1(articleType) {
-                        articleText = `\{\% set articles = Content.getArticles ("", 8) \%\}\n\{\% for article in articles \%\}{\% include "snippets/${articleType}.twig" with {"article": article} \%\}\{\% endfor \%\}\n{\% set params = {"tag": "all", "skip": 4, "limit": 4, "template": "${articleType}.twig"} \%\}\n\{\% include "load-more.twig" with params \%\}`;
-                        const cursorPosition = editor1.getSelection().index;
-                        editor1.insertText(cursorPosition, '\n' + articleText);
-
-                    }
-
-                    function toggleSource1() {
-                        if (!$('#saveHeaderContent').is(':visible')) {
-                            $('#saveHeaderContent').show();
-                            $('#headerContentEditor').hide();
-                            if ($('div.ql-editor', '#headerContentEditor').hasClass('ql-blank')) {
-                                $('#saveHeaderContent').val('');
-                            } else {
-                                $('#saveHeaderContent').val(editor1.root.innerHTML);
-                            }
-                        } else {
-                            $('#saveHeaderContent').hide();
-                            $('#headerContentEditor').show();
-                            editor1.root.innerHTML = $('#saveHeaderContent').val();
-                        }
-                    }
-
-                    editor1.on('text-change', function (delta, source) {
-                        if ($('div.ql-editor', '#headerContentEditor').hasClass('ql-blank')) {
-                            $('#saveHeaderContent').val('');
-                        } else {
-                            $('#saveHeaderContent').val(editor1.root.innerHTML);
-                        }
-                    });
-
-                </script>
-            </div>
-
-            {# Body Content - Start #}
-            <input type="button" class="form-control w-100 my-2 section-title" data-toggle="collapse"
-                   data-target="#contentDropdown" value="Content">
-            <div id="contentDropdown" class="collapse">
-
-                <div id="contentEditor" class="form-control" style="height:300px">{{ data.content | raw }}</div>
-
-                <textarea id="saveContent" class="form-control" style="display:none; height: 300px"
-                          name="content">{{ data.content | raw }}</textarea>
-                <script>
-                    var editor2 = new Quill('#contentEditor', {
-                        modules: {
-                            toolbar: {
-                                container: toolbarOptions,
-                                handlers: {
-                                    "snippets": insertSnippet2,
-                                    "articles": insertArticle2,
-                                    "html": toggleSource2
-                                }
-                            }
-                        },
-                        theme: 'snow'
-                    });
-
-                    function insertSnippet2(snippetName) {
-                        console.log('Inserting Snippet ', snippetName);
-
-                        const cursorPosition = editor2.getSelection().index;
-                        editor2.insertText(cursorPosition, '\n\{\{ include( getSnippet("' + snippetName + '") ) \}\}');
-                    }
-
-                    function insertArticle2(articleType) {
-                        articleText = `\{\% set articles = Content.getArticles ("", 8) \%\}\n\{\% for article in articles \%\}{\% include "snippets/${articleType}.twig" with {"article": article} \%\}\{\% endfor \%\}\n{\% set params = {"tag": "all", "skip": 4, "limit": 4, "template": "${articleType}.twig"} \%\}\n\{\% include "load-more.twig" with params \%\}`;
-                        const cursorPosition = editor2.getSelection().index;
-                        editor2.insertText(cursorPosition, '\n' + articleText);
-
-                    }
-
-                    function toggleSource2() {
-                        if (!$('#saveContent').is(':visible')) {
-                            $('#saveContent').show();
-                            $('#contentEditor').hide();
-                            if ($('div.ql-editor', '#contentEditor').hasClass('ql-blank')) {
-                                $('#saveContent').val('');
-                            } else {
-                                $('#saveContent').val(editor2.root.innerHTML);
-                            }
-                        } else {
-                            $('#saveContent').hide();
-                            $('#contentEditor').show();
-                            editor2.root.innerHTML = $('#saveContent').val();
-                        }
-                    }
-
-                    editor2.on('text-change', function (delta, source) {
-                        if ($('div.ql-editor', '#contentEditor').hasClass('ql-blank')) {
-                            $('#saveContent').val('');
-                        } else {
-                            $('#saveContent').val(editor2.root.innerHTML);
-                        }
-                    });
-                </script>
-            </div>
-            {# Footer - Start #}
-            <input type="button" class="form-control w-100 my-2 section-title" data-toggle="collapse"
-                   data-target="#footerDropdown" value="Footer">
-            <div id="footerDropdown" class="collapse">
-
-                <div id="footerEditor" class="form-control" style="height:300px">{{ data.footer | raw }}</div>
-                <textarea id="saveFooter" class="form-control" style="display:none; height: 300px"
-                          name="footer">{{ data.footer | raw }}</textarea>
-                <script>
-                    var editor3 = new Quill('#footerEditor', {
-                        modules: {
-                            toolbar: {
-                                container: toolbarOptions,
-                                handlers: {
-                                    "snippets": insertSnippet3,
-                                    "articles": insertArticle3,
-                                    "html": toggleSource3
-                                }
-                            }
-                        },
-                        theme: 'snow'
-                    });
-
-                    function insertSnippet3(snippetName) {
-                        console.log('Inserting Snippet ', snippetName);
-
-                        const cursorPosition = editor3.getSelection().index;
-                        editor3.insertText(cursorPosition, '\n\{\{ include( getSnippet("' + snippetName + '") ) \}\}');
-                    }
-
-                    function insertArticle3(articleType) {
-                        articleText = `\{\% set articles = Content.getArticles ("", 8) \%\}\n\{\% for article in articles \%\}{\% include "snippets/${articleType}.twig" with {"article": article} \%\}\{\% endfor \%\}\n{\% set params = {"tag": "all", "skip": 4, "limit": 4, "template": "${articleType}.twig"} \%\}\n\{\% include "load-more.twig" with params \%\}`;
-                        const cursorPosition = editor3.getSelection().index;
-                        editor3.insertText(cursorPosition, '\n' + articleText);
-
-                    }
-
-                    function toggleSource3() {
-                        if (!$('#saveFooter').is(':visible')) {
-                            $('#saveFooter').show();
-                            $('#footerEditor').hide();
-                            if ($('div.ql-editor', '#footerEditor').hasClass('ql-blank')) {
-                                $('#saveFooter').val('');
-                            } else {
-                                $('#saveFooter').val(editor3.root.innerHTML);
-                            }
-                        } else {
-                            $('#saveFooter').hide();
-                            $('#footerEditor').show();
-                            editor3.root.innerHTML = $('#saveFooter').val();
-                        }
-                    }
-
-                    editor3.on('text-change', function (delta, source) {
-                        if ($('div.ql-editor', '#footerEditor').hasClass('ql-blank')) {
-                            $('#saveFooter').val('');
-                        } else {
-                            $('#saveFooter').val(editor3.root.innerHTML);
-                        }
-                    });
-                </script>
-            </div>
-            <style>
-                .ql-snippets {
-                    width: 140px;
-                }
-
-                {% for snippet in snippets %}
-                .ql-snippets.ql-picker [data-value="{{ snippet.name }}"]::before {
-                    content: '{{ snippet.name }}'
-                }
-
-                {% endfor %}
-                .ql-articles {
-                    width: 140px;
-                }
-
-                .ql-articles.ql-picker [data-value="small"]::before {
-                    content: 'small'
-                }
-
-                .ql-articles.ql-picker [data-value="mini"]::before {
-                    content: 'mini'
-                }
-
-                .ql-articles.ql-picker [data-value="medium"]::before {
-                    content: 'medium'
-                }
-
-                .ql-articles.ql-picker [data-value="med-large"]::before {
-                    content: 'med-large'
-                }
-
-                .ql-articles.ql-picker [data-value="large"]::before {
-                    content: 'large'
-                }
-
-                .ql-html::before {
-                    content: '<html>'
-                }
-
-            </style>
+                });
+            </script>
+            <textarea id="saveContent" class="form-control" style="display:none; height: 300px" name="content">{{ data.content | raw }}</textarea>
         </div>
+
         <div class="form-group col-md-12">
             <label>Keywords/Tags</label>
             {% include "tagLookup.twig" %}
         </div>
+
+
+
+
     </div>
-    {{ "pageForm" | formToken | raw }}
+    {{  "pageForm" | formToken | raw }}
 </form>
