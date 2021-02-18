@@ -3,6 +3,9 @@
 \Tina4\Get::add("/", function (\Tina4\Response $response, \Tina4\Request $request) {
     $pageName = "home";
     $content = (new Content())->getPage($pageName);
+    $contentObject = (object)["content" => $content];
+
+    (new \Tina4\Event())->trigger("loadPageContent", [$contentObject, $pageName]);
 
     $pageMeta = (new Content())->getPageMeta($pageName);
     if (!file_exists("./src/assets/images/og-{$pageName}.png")) {
@@ -15,7 +18,7 @@
     } else {
         $image = "https://" . $_SERVER["HTTP_HOST"] . "/src/assets/images/og-{$pageName}.png";
     }
-    $html = \Tina4\renderTemplate("content.twig", ["content" => $content, "pageName" => $pageName, "title" => $pageMeta->title, "image" => $image, "description" => $pageMeta->description, "keywords" => $pageMeta->keywords]);
+    $html = \Tina4\renderTemplate("content.twig", array_merge((array)$contentObject, ["pageName" => $pageName, "title" => $pageMeta->title, "image" => $image, "description" => $pageMeta->description, "keywords" => $pageMeta->keywords]));
 
     return $response ($html, HTTP_OK, TEXT_HTML);
 });
@@ -24,7 +27,9 @@
 \Tina4\Get::add("/content/{pageName}", function ($pageName, \Tina4\Response $response, \Tina4\Request $request) {
 
     $content = (new Content())->getPage($pageName);
+    $contentObject = (object)["content" => $content];
 
+    (new \Tina4\Event())->trigger("loadPageContent", [$contentObject, $pageName]);
 
     $pageMeta = (new Content())->getPageMeta($pageName);
     if (!file_exists("./src/assets/images/og-{$pageName}.png")) {
@@ -37,7 +42,7 @@
     } else {
         $image = "https://" . $_SERVER["HTTP_HOST"] . "/src/assets/images/og-{$pageName}.png";
     }
-    $html = \Tina4\renderTemplate("content.twig", ["content" => $content, "pageName" => $pageName, "title" => $pageMeta->title, "image" => $image, "description" => $pageMeta->description, "keywords" => $pageMeta->keywords]);
+    $html = \Tina4\renderTemplate("content.twig", array_merge((array)$contentObject, ["pageName" => $pageName, "title" => $pageMeta->title, "image" => $image, "description" => $pageMeta->description, "keywords" => $pageMeta->keywords]));
     return $response ($html, HTTP_OK, TEXT_HTML);
 });
 

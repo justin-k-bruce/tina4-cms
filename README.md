@@ -142,10 +142,11 @@ Generic Code Example:
 
 | Events           | Variables                             |
 |------------------|---------------------------------------|
+| loadPageContent  | object $contentObject, $pageName      |
 | beforePageCreate | object Page,  \Tina4\Request $request |
 | afterPageCreate  | object Page,  \Tina4\Request $request |
 | beforePageUpdate | object Page,  \Tina4\Request $request |
 | afterPageUpdate  | object Page,  \Tina4\Request $request |
 | beforePageDelete | object Page,  \Tina4\Request $request |
-| afterPageDelete   | object Page,  \Tina4\Request $request |
+| afterPageDelete  | object Page,  \Tina4\Request $request |
 | beforePageFetch  | object Page,  \Tina4\Request $request |
